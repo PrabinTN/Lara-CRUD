@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\TagController;
@@ -27,4 +26,5 @@ Route::get('/posts/category/{category}', [PostController::class, 'filterByCatego
 Route::get('/posts/tag/{tag}', [PostController::class, 'filterByTag'])->name('posts.filter.tag');
 
 Route::resource('categories', CategoryController::class);
+
 Route::resource('tags', TagController::class);

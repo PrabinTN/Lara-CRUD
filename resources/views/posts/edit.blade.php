@@ -3,15 +3,28 @@
 @section('content')
 <div class="container">
     <h2>Edit Post</h2>
-    <form method="POST" action="{{ route('posts.update', $post) }}">
+    <form method="POST" action="{{ route('posts.update', $post) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
-        <!-- Title Input -->
         <div class="mb-3">
             <label>Title</label>
             <input type="text" name="title" class="form-control" value="{{ $post->title }}">
             @error('title') <small class="text-danger">{{ $message }}</small> @enderror
+        </div>
+
+
+         <!-- Image Input (File upload) -->
+         <div class="mb-3">
+            <label for="post_image">Post Image</label>
+            <input type="file" name="post_image" id="post_image" accept="image/*" class="form-control">
+            @if($post->post_image)
+                <div class="mt-3">
+                    <label>Current Image:</label>
+                    <img src="{{ asset('storage/' . $post->post_image) }}" alt="Post Image" class="img-fluid" style="max-width: 100px;">
+                </div>
+            @endif
+            @error('post_image') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
 
         <!-- Content Input -->
@@ -20,6 +33,7 @@
             <textarea name="content" class="form-control">{{ $post->content }}</textarea>
             @error('content') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
+
 
         <!-- Category Selection -->
         <div class="mb-3">
@@ -50,6 +64,8 @@
             </div>
             @error('tags') <small class="text-danger">{{ $message }}</small> @enderror
         </div>
+
+       
 
         <!-- Submit Button -->
         <button type="submit" class="btn btn-primary">Update</button>

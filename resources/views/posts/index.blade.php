@@ -14,6 +14,12 @@
             <div class="col-md-6 mb-4">
                 <div class="card shadow-sm">
                     <div class="card-body">
+
+                        @if($post->post_image)
+                            <div class="post-image-container mb-3">
+                                <img src="{{ asset('storage/' . $post->post_image) }}" alt="Post Image" class="img-fluid w-100">
+                            </div>
+                        @endif
                         <h5 class="card-title">{{ $post->title }}</h5>
                         <p class="card-text">{{ Str::limit($post->content, 150) }}</p>
                         <p class="text-muted">Category: 
@@ -44,4 +50,7 @@
         {{ $posts->links('pagination::bootstrap-4') }}
     </div>
 </div>
+
+
+
 @endsection
