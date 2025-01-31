@@ -9,40 +9,48 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="row">
-        @foreach($posts as $post)
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-
-                        @if($post->post_image)
-                            <div class="post-image-container mb-3">
-                                <img src="{{ asset('storage/' . $post->post_image) }}" alt="Post Image" class="img-fluid w-100">
-                            </div>
-                        @endif
-                        <h5 class="card-title">{{ $post->title }}</h5>
-                        <p class="card-text">{{ Str::limit($post->content, 150) }}</p>
-                        <p class="text-muted">Category: 
-                            <strong>{{ $post->category ? $post->category->name : 'No category assigned' }}</strong>
-                        </p>
-                        <p class="text-muted">Tags: 
-                            @foreach ($post->tags as $index => $tag)
-                                <span>{{ $tag->name }}</span>
-                                @if (!$loop->last) 
-                                    ,
-                                @endif
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Image</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Tags</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($posts as $index => $post)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>
+                            @if($post->post_image)
+                                <img src="{{ asset('storage/' . $post->post_image) }}" alt="Post Image" class="img-thumbnail" width="100">
+                            @else
+                                <span>No Image</span>
+                            @endif
+                        </td>
+                        <td>{{ $post->title }}</td>
+                        <td>{{ $post->category ? $post->category->name : 'No category assigned' }}</td>
+                        <td>
+                            @foreach ($post->tags as $tag)
+                                <span class="badge bg-primary">{{ $tag->name }}</span>
                             @endforeach
-                        </p>
-                        <a href="{{ route('posts.show', $post) }}" class="btn btn-primary btn-sm">View</a>
-                        <a href="{{ route('posts.edit', $post) }}" class="btn btn-warning btn-sm">Edit</a>
-                        <form action="{{ route('posts.destroy', $post) }}" method="POST" class="d-inline">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-danger btn-sm">Delete</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        @endforeach
+                        </td>
+                        <td>
+                            <a href="{{ route('posts.show', $post) }}" class="btn btn-primary btn-sm">View</a>
+                            <a href="{{ route('posts.edit', $post) }}" class="btn btn-warning btn-sm">Edit</a>
+                            <form action="{{ route('posts.destroy', $post) }}" method="POST" class="d-inline">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 
     <!-- Pagination -->
@@ -50,7 +58,4 @@
         {{ $posts->links('pagination::bootstrap-4') }}
     </div>
 </div>
-
-
-
 @endsection
