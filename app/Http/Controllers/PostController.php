@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
-use App\Models\Category; // Add this line for categories
-use App\Models\Tag; // Add this line for tags
-use Illuminate\Http\Request;
+use App\Models\Category;
+use App\Models\Tag;
+use App\Http\Requests\PostRequest; // Import the PostRequest
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -13,7 +13,7 @@ class PostController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth'); // Ensure user is authenticated
+        $this->middleware('auth');
     }
 
     public function index()
@@ -24,40 +24,28 @@ class PostController extends Controller
 
     public function create()
     {
-        $categories = Category::all(); // Get all categories
-        $tags = Tag::all(); // Get all tags
+        $categories = Category::all();
+        $tags = Tag::all();
         return view('posts.create', compact('categories', 'tags'));
     }
 
-    public function store(Request $request)
+    public function store(PostRequest $request)
     {
-        // Validate incoming data
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'tags' => 'array|exists:tags,id',
-            'post_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate image
-        ]);
+        // Handle file upload
+        $postImagePath = $request->hasFile('post_image')
+            ? $request->file('post_image')->store('images/posts', 'public')
+            : null;
 
-        // Handle the image upload if present
-        $postImagePath = null;
-        if ($request->hasFile('post_image')) {
-            // Store image and get the path
-            $postImage = $request->file('post_image');
-            $postImagePath = $postImage->store('images/posts', 'public'); // Store the image in storage/app/public/images/posts
-        }
-
-        // Create the post with the image path
+        // Create post
         $post = Post::create([
             'user_id' => Auth::id(),
             'title' => $request->title,
             'content' => $request->content,
             'category_id' => $request->category_id,
-            'post_image' => $postImagePath, // Save image path in database
+            'post_image' => $postImagePath,
         ]);
 
-        // Attach selected tags if any
+        // Attach tags
         if ($request->has('tags')) {
             $post->tags()->sync($request->tags);
         }
@@ -68,7 +56,7 @@ class PostController extends Controller
     public function show(Post $post)
     {
         if ($post->user_id !== Auth::id()) {
-            abort(403); // If the post does not belong to the authenticated user, abort
+            abort(403);
         }
         return view('posts.show', compact('post'));
     }
@@ -76,52 +64,33 @@ class PostController extends Controller
     public function edit(Post $post)
     {
         if ($post->user_id !== Auth::id()) {
-            abort(403); // Ensure the post belongs to the authenticated user
+            abort(403);
         }
 
-        $categories = Category::all(); // Get all categories
-        $tags = Tag::all(); // Get all tags
+        $categories = Category::all();
+        $tags = Tag::all();
         return view('posts.edit', compact('post', 'categories', 'tags'));
     }
 
-    public function update(Request $request, Post $post)
+    public function update(PostRequest $request, Post $post)
     {
         if ($post->user_id !== Auth::id()) {
-            abort(403); // Ensure the post belongs to the authenticated user
+            abort(403);
         }
 
-        // Validate incoming data
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'tags' => 'array|exists:tags,id',
-            'post_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate image
-        ]);
-
-        // Handle the file upload for the post image if present
+        // Handle image update
         if ($request->hasFile('post_image')) {
-            // Delete old image if it exists
             if ($post->post_image && Storage::exists('public/' . $post->post_image)) {
                 Storage::delete('public/' . $post->post_image);
             }
-
-            // Upload new image
-            $postImage = $request->file('post_image');
-            $postImagePath = $postImage->store('images/posts', 'public'); // Store in public disk
-            $post->update([
-                'post_image' => $postImagePath, // Update image path in the database
-            ]);
+            $postImagePath = $request->file('post_image')->store('images/posts', 'public');
+            $post->post_image = $postImagePath;
         }
 
-        // Update post content
-        $post->update([
-            'title' => $request->title,
-            'content' => $request->content,
-            'category_id' => $request->category_id,
-        ]);
+        // Update post
+        $post->update($request->only(['title', 'content', 'category_id']));
 
-        // Sync selected tags
+        // Sync tags
         if ($request->has('tags')) {
             $post->tags()->sync($request->tags);
         }
@@ -132,7 +101,7 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         if ($post->user_id !== Auth::id()) {
-            abort(403); // Ensure the post belongs to the authenticated user
+            abort(403);
         }
 
         // Delete the post image if it exists
